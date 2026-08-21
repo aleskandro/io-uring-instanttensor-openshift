@@ -1,0 +1,59 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: test-io-uring
+  namespace: experiment-02
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-io-uring
+  template:
+    metadata:
+      labels:
+        app: test-io-uring
+    spec:
+      hostUsers: false
+      containers:
+        - name: uring-test
+          image: 'quay.io/aleskandrox/asd:iouring'
+          command:
+            - /bin/sh
+            - '-c'
+            - |
+              echo "Kernel:"
+              uname -a
+              echo
+              whoami
+              echo
+              echo "io_uring sysctl:"
+              if [ -r /proc/sys/kernel/io_uring_disabled ]; then
+                cat /proc/sys/kernel/io_uring_disabled
+              else
+                echo "kernel.io_uring_disabled sysctl not present"
+              fi
+
+              echo
+              exec /usr/local/bin/uring-test
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        kubernetes.io/hostname: test-gpu-2-a100p-us-east-1-zcqkw
+      tolerations:
+        - effect: NoSchedule
+          key: benchmark.llm-d.ai/test-gpu-amd64
+          operator: Exists
+      securityContext:
+        seccompProfile:
+          type: Localhost
+          localhostProfile: profiles/io-uring.json
+      schedulerName: default-scheduler
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

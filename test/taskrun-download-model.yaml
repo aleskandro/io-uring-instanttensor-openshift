@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1
+kind: TaskRun
+metadata:
+  name: download-qwen3-32b-1
+  namespace: experiment-02
+  labels:
+    app.kubernetes.io/component: model-download
+    model: qwen3-32b
+spec:
+  taskRef:
+    resolver: cluster
+    params:
+      - name: kind
+        value: task
+      - name: name
+        value: download-model
+      - name: namespace
+        value: pipelines
+  params:
+    - name: MODEL_NAME
+      value: "Qwen/Qwen3-32B"
+    - name: MODEL_REVISION
+      value: "main"
+    - name: SKIP_IF_EXISTS
+      value: "false"
+    - name: CACHE_DIR
+      value: "models"
+  podTemplate:
+    tolerations:
+      - effect: NoSchedule
+        key: benchmark.llm-d.ai/test-gpu-amd64
+        operator: Exists
+  workspaces:
+    - name: models-storage
+      persistentVolumeClaim:
+        claimName: model-storage-lso

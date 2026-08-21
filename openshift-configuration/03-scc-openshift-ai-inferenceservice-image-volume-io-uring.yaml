@@ -1,0 +1,40 @@
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
+allowedCapabilities:
+- IPC_LOCK
+apiVersion: security.openshift.io/v1
+defaultAddCapabilities: null
+fsGroup:
+  type: RunAsAny
+groups: []
+kind: SecurityContextConstraints
+metadata:
+  name: openshift-ai-inferenceservice-image-volume-io-uring-scc
+priority: null
+readOnlyRootFilesystem: false
+requiredDropCapabilities:
+  - ALL
+runAsUser:
+  type: MustRunAsRange
+seLinuxContext:
+  type: MustRunAs
+seccompProfiles:
+  - runtime/default
+  - localhost/profiles/io-uring.json
+supplementalGroups:
+  type: RunAsAny
+userNamespaceLevel: AllowHostLevel
+users: []
+volumes:
+  - configMap
+  - downwardAPI
+  - emptyDir
+  - image
+  - persistentVolumeClaim
+  - projected
+  - secret
