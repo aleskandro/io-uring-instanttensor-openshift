@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1
 kind: TaskRun
 metadata:
   name: download-qwen3-32b-1
-  namespace: experiment-02
+  namespace: experiment-01
   labels:
     app.kubernetes.io/component: model-download
     model: qwen3-32b
@@ -30,8 +30,7 @@ spec:
       - effect: NoSchedule
         key: benchmark.llm-d.ai/test-gpu-amd64
         operator: Exists
-    nodeSelector:
-      kubernetes.io/hostname: diadochos-hqxzk-gpu-h100-6kl5z
+
   workspaces:
     - name: models-storage
       persistentVolumeClaim:

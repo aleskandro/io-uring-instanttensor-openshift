@@ -1,0 +1,40 @@
+apiVersion: serving.kserve.io/v1alpha2
+kind: LLMInferenceService
+metadata:
+  annotations:
+    security.opendatahub.io/enable-auth: "false"
+    serving.kserve.io/enable-prometheus-scraping: "true"
+  name: llm-inference-service
+  namespace: experiment-01
+spec:
+  model:
+    name: RedHatAI/Inkling-Small-FP8-dynamic
+    uri: pvc://model-storage-lso/models--RedHatAI--Inkling-Small-FP8-dynamic/
+  replicas: 1
+  router:
+    gateway: {}
+    route: {}
+    scheduler: {}
+  parallelism:
+    tensor: 4
+  template:
+    tolerations:
+      - effect: NoSchedule
+        key: benchmark.llm-d.ai/test-gpu-amd64
+        operator: Exists
+    containers:
+      - name: main
+        image: quay.io/aleskandrox/asd:vllm2
+        env:
+          - name: VLLM_ADDITIONAL_ARGS
+            value: >-
+              --load-format=fastsafetensors
+              --disable-uvicorn-access-log
+              --gpu-memory-utilization=0.95
+          - name: FLASHINFER_DISABLE_VERSION_CHECK
+            value: '1'
+        resources:
+          limits:
+            nvidia.com/gpu: "4"
+          requests:
+            nvidia.com/gpu: "4"

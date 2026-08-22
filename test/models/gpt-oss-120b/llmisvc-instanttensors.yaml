@@ -1,0 +1,46 @@
+apiVersion: serving.kserve.io/v1alpha2
+kind: LLMInferenceService
+metadata:
+  annotations:
+    security.opendatahub.io/enable-auth: "false"
+    serving.kserve.io/enable-prometheus-scraping: "true"
+  name: llm-inference-service
+  namespace: experiment-01
+spec:
+  model:
+    name: RedHatAI/gpt-oss-120b
+    uri: pvc://model-storage-lso/models--RedHatAI--gpt-oss-120b/
+  replicas: 1
+  router:
+    gateway: {}
+    route: {}
+    scheduler: {}
+  parallelism:
+    tensor: 8
+  template:
+    tolerations:
+      - effect: NoSchedule
+        key: benchmark.llm-d.ai/test-gpu-amd64
+        operator: Exists
+    containers:
+      - name: main
+        image: quay.io/aleskandrox/asd:vllm
+        env:
+          - name: VLLM_ADDITIONAL_ARGS
+            value: >-
+              --disable-uvicorn-access-log
+              --gpu-memory-utilization=0.95
+              --load-format=instanttensor
+          - name: INSTANTTENSOR_DEBUG
+            value: '1'
+          - name: INSTANTTENSOR_BACKEND
+            value: URING
+        securityContext:
+          seccompProfile:
+            type: Localhost
+            localhostProfile: profiles/io-uring.json
+        resources:
+          limits:
+            nvidia.com/gpu: "8"
+          requests:
+            nvidia.com/gpu: "8"

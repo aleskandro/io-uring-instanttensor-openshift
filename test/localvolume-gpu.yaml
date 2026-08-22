@@ -1,0 +1,22 @@
+apiVersion: local.storage.openshift.io/v1
+kind: LocalVolume
+metadata:
+  name: "local-disks-gpu"
+  namespace: "openshift-local-storage"
+spec:
+  tolerations:
+    - key: benchmark.llm-d.ai/test-gpu-amd64
+      effect: NoSchedule
+  nodeSelector:
+    nodeSelectorTerms:
+      - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+              - diadochos-hqxzk-gpu-h100-gjfjh
+  storageClassDevices:
+    - storageClassName: "local-sc-gpu"
+      volumeMode: Filesystem
+      fsType: xfs
+      devicePaths:
+        - /dev/md127

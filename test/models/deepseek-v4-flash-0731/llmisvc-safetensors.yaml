@@ -1,0 +1,46 @@
+apiVersion: serving.kserve.io/v1alpha2
+kind: LLMInferenceService
+metadata:
+  annotations:
+    security.opendatahub.io/enable-auth: "false"
+    serving.kserve.io/enable-prometheus-scraping: "true"
+  name: llm-inference-service
+  namespace: experiment-01
+spec:
+  model:
+    name: deepseek-ai/DeepSeek-V4-Flash-0731
+    uri: pvc://model-storage-lso/models--deepseek-ai--DeepSeek-V4-Flash-0731/
+  replicas: 1
+  router:
+    gateway: {}
+    route: {}
+    scheduler: {}
+  parallelism:
+    tensor: 8
+  template:
+    tolerations:
+      - effect: NoSchedule
+        key: benchmark.llm-d.ai/test-gpu-amd64
+        operator: Exists
+    containers:
+      - name: main
+        image: quay.io/aleskandrox/asd:vllm
+        env:
+          - name: VLLM_ADDITIONAL_ARGS
+            value: >-
+              --trust-remote-code
+              --kv-cache-dtype fp8
+              --block-size 256
+              --enable-expert-parallel
+              --tensor-parallel-size 8
+              --tokenizer-mode deepseek_v4
+              --tool-call-parser deepseek_v4
+              --enable-auto-tool-choice
+              --reasoning-parser deepseek_v4
+              --disable-uvicorn-access-log
+              --gpu-memory-utilization=0.95
+        resources:
+          limits:
+            nvidia.com/gpu: "8"
+          requests:
+            nvidia.com/gpu: "8"

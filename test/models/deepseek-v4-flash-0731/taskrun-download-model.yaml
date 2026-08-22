@@ -1,11 +1,11 @@
 apiVersion: tekton.dev/v1
 kind: TaskRun
 metadata:
-  name: download-qwen3-32b-1
-  namespace: experiment-02
+  name: download-deepseek-v4-flash-0731-1
+  namespace: experiment-01
   labels:
     app.kubernetes.io/component: model-download
-    model: qwen3-32b
+    model: deepseek-v4-flash-0731
 spec:
   taskRef:
     resolver: cluster
@@ -18,7 +18,7 @@ spec:
         value: pipelines
   params:
     - name: MODEL_NAME
-      value: "Qwen/Qwen3-32B"
+      value: "deepseek-ai/DeepSeek-V4-Flash-0731"
     - name: MODEL_REVISION
       value: "main"
     - name: SKIP_IF_EXISTS
@@ -30,8 +30,7 @@ spec:
       - effect: NoSchedule
         key: benchmark.llm-d.ai/test-gpu-amd64
         operator: Exists
-    nodeSelector:
-      kubernetes.io/hostname: diadochos-hqxzk-gpu-h100-6kl5z
+
   workspaces:
     - name: models-storage
       persistentVolumeClaim:

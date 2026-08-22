@@ -5,10 +5,10 @@ metadata:
     security.opendatahub.io/enable-auth: "false"
     serving.kserve.io/enable-prometheus-scraping: "true"
   name: llm-inference-service
-  namespace: experiment-02
+  namespace: experiment-01
 spec:
   model:
-    name: Qwen/Qwen3-32B
+    name: RedHatAI/gemma-4-26B-A4B-it
     uri: pvc://model-storage-lso
   replicas: 1
   router:
@@ -34,9 +34,9 @@ spec:
       - args:
          - --port=8000
          - --host=0.0.0.0
-         - --model=/mnt/models/models--Qwen--Qwen3-32B/
-         - --served-model-name=Qwen/Qwen3-32B
-         - --tensor-parallel-size=2
+         - --model=/mnt/models/models--RedHatAI--gemma-4-26B-A4B-it/
+         - --served-model-name=RedHatAI/gemma-4-26B-A4B-it
+         - --tensor-parallel-size=1
          - --enable-ssl-refresh
          - --ssl-certfile=/var/run/kserve/tls/tls.crt
          - --ssl-keyfile=/var/run/kserve/tls/tls.key
@@ -77,6 +77,6 @@ spec:
         name: main
         resources:
           limits:
-            nvidia.com/gpu: "2"
+            nvidia.com/gpu: "1"
           requests:
-            nvidia.com/gpu: "2"
+            nvidia.com/gpu: "1"

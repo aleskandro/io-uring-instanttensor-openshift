@@ -2,12 +2,12 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: model-storage-lso
-  namespace: experiment-02
+  namespace: experiment-01
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 80Gi
+      storage: 5Ti
   storageClassName: local-sc-gpu
   volumeMode: Filesystem
