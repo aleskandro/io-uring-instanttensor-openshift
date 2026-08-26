@@ -1,6 +1,8 @@
 
 ## Benchmark
 
+## H100
+
 ### SW raid0 including 7 NVMe PCIe 4 disks (56GB/s)
 
 | Model                         | safetensors | fastsafetensors | instanttensor (URING) | instanttensor (AIO) | Notes                                                                                                                                                                                                                                                                      |
@@ -17,11 +19,51 @@
 
 ### Single NVMe PCIe 4 disk (8GB/s)
 
-| Model                         | safetensors | fastsafetensors | instanttensor (URING) | instanttensor (AIO) | Notes                      |
-|-------------------------------|-------------|-----------------|-----------------------|---------------------|----------------------------|
-| Gemma-4-26B (TP=2)            | 10.28s      | 5.24s           | 7.45s                 | 7.45s               |                            |
-| GPT-oss-120b (TP=4)           | 8.78s       | 2.75s           | 10.52s                | 10.53s              |
-| DeepSeek-v4-Flash-0731 (TP=4) | 15.36s      | 15.80s          | 24.59s                | 25.70s              |                            |
+| Model                         | safetensors | fastsafetensors | instanttensor (URING) | instanttensor (AIO) | Notes |
+|-------------------------------|-------------|-----------------|-----------------------|---------------------|-------|
+| Gemma-4-26B (TP=2)            | 10.28s      | 5.24s           | 7.45s                 | 7.45s               |       |
+| GPT-oss-120b (TP=4)           | 8.78s       | 2.75s           | 10.52s                | 10.53s              |       |
+| DeepSeek-v4-Flash-0731 (TP=4) | 15.36s      | 15.80s          | 24.59s                | 25.70s              |       |
+
+## H200
+
+### 8x NVMe PCIe 4 disks @ SW RAID0 (64GB/s)
+
+| Model                | safetensors | fastsafetensors | instanttensor (AIO_BUFFERED) | instanttensor (AIO) | Notes |
+|----------------------|-------------|-----------------|------------------------------|---------------------|-------|
+| Qwen3-32B (TP=1)     | 14.73s      | 16.01s          | 15.36s                       | 1.93s               |       |
+| Gemma-4-26B (TP=2)   | 10.50s      | 5.09s           | 10.12s                       | 2.02s               |       |
+| GPT-oss-120b (TP=4)  | 14.28s      | 4.86s           | 8.98s                        | 3.44s               |       |
+| Inkling-Small (TP=8) | 25.03s      | 22.00s          | 92.57s                       | 13.01s              |       |
+| Inkling-nvfp4 (TP=8) | 251.36s     | 33.00s          | 110.37s                      | 21.56s              |       |
+
+
+### 2x NVMe PCIe 4 disks @ SW RAID0 (16GB/s)
+
+| Model                | safetensors | fastsafetensors | instanttensor (AIO_BUFFERED) | instanttensor (AIO) | Notes |
+|----------------------|-------------|-----------------|------------------------------|---------------------|-------|
+| Gemma-4-26B (TP=2)   | 11.43s      | 5.29s           | 12.12s                       | 4.79s               |       |
+| Inkling-nvfp4 (TP=8) | 261.21s     | 45.00s          | 101.86s                      | 53.61s              |       |
+
+
+### 1x NVMe PCIe 4 disks @ SW RAID0 (8GB/s)
+
+| Model                | safetensors | fastsafetensors | instanttensor (AIO_BUFFERED) | instanttensor (AIO) | Notes |
+|----------------------|-------------|-----------------|------------------------------|---------------------|-------|
+| Gemma-4-26B (TP=2)   | 13.43s      | 8.75s           | 6.74s                        | 8.56s               |       |
+| Inkling-nvfp4 (TP=8) | 265.23s     | 97.00s          | 103.87s                      | 95.91s              |       |
+
+
+# Key Takeaways
+
+- In H200 nodes, starting with 1 NVMe disk, `instanttensor` is faster than `safetensors` for all tested models, showing 56% to 178% speedup.
+- When the number of NVMe disks is increased to 2, `instanttensor` shows 2x to 5x speedup over `safetensors`.
+- With 8 NVMe disks in RAID0, `instanttensor` shows 7x to 10x speedup over `safetensors`
+- InstantTensor's AIO_BUFFERED mode is always slower than AIO mode, except when a single NVMe disk is used, where loading Gemma-4-26B with AIO_BUFFERED is 27% faster than AIO. The result is not consistent for larger models, as shown for the Inkling-nvfp4 model, where AIO_BUFFERED is 8% slower than AIO.
+- When using `instanttensor`, the URING backend is slightly faster than the AIO backend on H100 nodes, but it does not justify the additional security risks involved.
+- `fastsafetensors` is faster than `safetensors` for large models on fast NVMe storage, but it can fail to load models with very large individual checkpoint shards due to peak memory requirements.
+
+The recommendation for users is to use `instanttensor` when the storage is fast enough to support it (>7GB/s). For slower storage, `fastsafetensors` is a good alternative when the model checkpoint is split into small shards. 
 
 # Gemma-4-26B-A4B-it Loading Failure with `fastsafetensors`
 
