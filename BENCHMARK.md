@@ -46,12 +46,12 @@
 | Inkling-nvfp4 (TP=8) | 261.21s     | 45.00s          | 101.86s                      | 53.61s              |       |
 
 
-### 1x NVMe PCIe 4 disks @ SW RAID0 (8GB/s)
+### 1x NVMe PCIe 4 disks (8GB/s)
 
-| Model                | safetensors | fastsafetensors | instanttensor (AIO_BUFFERED) | instanttensor (AIO) | Notes |
-|----------------------|-------------|-----------------|------------------------------|---------------------|-------|
-| Gemma-4-26B (TP=2)   | 13.43s      | 8.75s           | 6.74s                        | 8.56s               |       |
-| Inkling-nvfp4 (TP=8) | 265.23s     | 97.00s          | 103.87s                      | 95.91s              |       |
+| Model                | safetensors      | fastsafetensors | instanttensor (AIO_BUFFERED) | instanttensor (AIO) | Notes                                                            |
+|----------------------|------------------|-----------------|------------------------------|---------------------|------------------------------------------------------------------|
+| Gemma-4-26B (TP=2)   | 13.43s (7.66s)   | 8.75s (4.89s)   | 13.47s (6.64s)               | 8.56s               | Value in parentheses is a warm-cache second run — see note below |
+| Inkling-nvfp4 (TP=8) | 265.23s (34.33s) | 97.00s (18.72s) | 103.87s (19.63s)             | 95.91s              |                                                                  |
 
 
 # Key Takeaways
@@ -62,8 +62,9 @@
 - InstantTensor's AIO_BUFFERED mode is always slower than AIO mode, except when a single NVMe disk is used, where loading Gemma-4-26B with AIO_BUFFERED is 27% faster than AIO. The result is not consistent for larger models, as shown for the Inkling-nvfp4 model, where AIO_BUFFERED is 8% slower than AIO.
 - When using `instanttensor`, the URING backend is slightly faster than the AIO backend on H100 nodes, but it does not justify the additional security risks involved.
 - `fastsafetensors` is faster than `safetensors` for large models on fast NVMe storage, but it can fail to load models with very large individual checkpoint shards due to peak memory requirements.
+- Buffered I/O results - within parentheses in the 1x NVMe disk table - require a warm cache to achieve the reported speedup. Pods that are re-created might not leverage a warm cache if the node where they are scheduled has no mount for the model checkpoint partition.
 
-The recommendation for users is to use `instanttensor` when the storage is fast enough to support it (>7GB/s). For slower storage, `fastsafetensors` is a good alternative when the model checkpoint is split into small shards. 
+The recommendation for users is to use `instanttensor` when the storage is fast enough to support it (>7GB/s). For slower storage, `fastsafetensors` is a good alternative when the model checkpoint is split into small shards.
 
 # Gemma-4-26B-A4B-it Loading Failure with `fastsafetensors`
 
